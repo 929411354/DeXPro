@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background"
+    android:padding="16dp">
+
+    <!-- Title -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="DeX Pro Settings"
+        android:textColor="@color/onBackground"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:paddingBottom="24dp" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Freeform window limit -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Freeform Window Limit"
+                android:textColor="@color/onBackground"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:paddingTop="16dp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="8dp">
+                <SeekBar
+                    android:id="@+id/sliderWindowLimit"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:max="12"
+                    android:progress="5" />
+                <TextView
+                    android:id="@+id/tvWindowLimitValue"
+                    android:layout_width="48dp"
+                    android:layout_height="wrap_content"
+                    android:text="5"
+                    android:textColor="@color/onSurface"
+                    android:gravity="center"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <!-- Dock position -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Dock Position"
+                android:textColor="@color/onBackground"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:paddingTop="24dp" />
+            <RadioGroup
+                android:id="@+id/rgDockPosition"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingTop="8dp">
+                <RadioButton
+                    android:id="@+id/rbDockBottom"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Bottom"
+                    android:textColor="@color/onSurface"
+                    android:checked="true" />
+                <RadioButton
+                    android:id="@+id/rbDockLeft"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Left"
+                    android:textColor="@color/onSurface" />
+                <RadioButton
+                    android:id="@+id/rbDockRight"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Right"
+                    android:textColor="@color/onSurface" />
+            </RadioGroup>
+
+            <!-- Dark mode toggle -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Appearance"
+                android:textColor="@color/onBackground"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:paddingTop="24dp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="8dp">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Dark Mode"
+                    android:textColor="@color/onSurface"
+                    android:textSize="14sp" />
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swDarkMode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true" />
+            </LinearLayout>
+
+            <!-- Light mode option -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="12dp">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Follow System"
+                    android:textColor="@color/onSurface"
+                    android:textSize="14sp" />
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swFollowSystem"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="false" />
+            </LinearLayout>
+
+            <!-- Wallpaper selection -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Wallpaper"
+                android:textColor="@color/onBackground"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:paddingTop="24dp" />
+            <Button
+                android:id="@+id/btnWallpaper"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="Select Wallpaper"
+                android:layout_marginTop="8dp" />
+
+            <!-- Advanced settings -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Advanced"
+                android:textColor="@color/onBackground"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:paddingTop="24dp" />
+            <Button
+                android:id="@+id/btnAdvancedSettings"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="Extended Settings"
+                android:layout_marginTop="8dp" />
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

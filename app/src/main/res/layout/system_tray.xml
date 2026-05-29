@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/systemTrayRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_start_menu"
+    android:elevation="16dp"
+    android:padding="16dp">
+
+    <!-- Quick Settings tiles -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <LinearLayout
+            android:id="@+id/tileWifi"
+            android:layout_width="0dp"
+            android:layout_height="64dp"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/bg_quick_tile"
+            android:layout_margin="4dp">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_wifi" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Wi-Fi"
+                android:textSize="10sp"
+                android:textColor="@color/onSurface" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/tileBluetooth"
+            android:layout_width="0dp"
+            android:layout_height="64dp"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/bg_quick_tile"
+            android:layout_margin="4dp">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_bluetooth" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="BT"
+                android:textSize="10sp"
+                android:textColor="@color/onSurface" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/tileDesktopMode"
+            android:layout_width="0dp"
+            android:layout_height="64dp"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/bg_quick_tile_active"
+            android:layout_margin="4dp">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_desktop" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Desktop"
+                android:textSize="10sp"
+                android:textColor="@color/onPrimary" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Brightness slider -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="8dp">
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:src="@drawable/ic_brightness"
+            android:alpha="0.6" />
+        <SeekBar
+            android:id="@+id/sliderBrightness"
+            android:layout_width="0dp"
+            android:layout_height="24dp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:max="255" />
+    </LinearLayout>
+
+    <!-- Volume slider -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:src="@drawable/ic_volume"
+            android:alpha="0.6" />
+        <SeekBar
+            android:id="@+id/sliderVolume"
+            android:layout_width="0dp"
+            android:layout_height="24dp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:max="15" />
+    </LinearLayout>
+
+    <!-- Workspace switcher -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Workspaces"
+        android:textColor="#888"
+        android:textSize="11sp"
+        android:textAllCaps="true"
+        android:letterSpacing="0.1"
+        android:paddingTop="8dp" />
+
+    <LinearLayout
+        android:id="@+id/workspaceList"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="4dp">
+        <TextView
+            android:id="@+id/ws1"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:gravity="center"
+            android:text="1"
+            android:textColor="@color/onPrimary"
+            android:background="@drawable/bg_workspace_active" />
+        <TextView
+            android:id="@+id/ws2"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:gravity="center"
+            android:text="2"
+            android:textColor="@color/onSurface"
+            android:background="@drawable/bg_workspace"
+            android:layout_marginStart="6dp" />
+        <TextView
+            android:id="@+id/ws3"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:gravity="center"
+            android:text="3"
+            android:textColor="@color/onSurface"
+            android:background="@drawable/bg_workspace"
+            android:layout_marginStart="6dp" />
+        <TextView
+            android:id="@+id/ws4"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:gravity="center"
+            android:text="4"
+            android:textColor="@color/onSurface"
+            android:background="@drawable/bg_workspace"
+            android:layout_marginStart="6dp" />
+        <TextView
+            android:id="@+id/btnAddWorkspace"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:gravity="center"
+            android:text="+"
+            android:textColor="@color/onSurface"
+            android:background="@drawable/bg_workspace"
+            android:layout_marginStart="6dp" />
+    </LinearLayout>
+</LinearLayout>

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Desktop mode permissions -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
+    <!-- Accessibility for task detection -->
+    <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE" />
+
+    <!-- Desktop mode feature declarations -->
+    <uses-feature android:name="android.software.freeform_window_management"
+        android:required="false" />
+    <uses-feature android:name="android.hardware.touchscreen"
+        android:required="false" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.DeXPro"
+        android:resizeableActivity="true">
+
+        <!-- Main Launcher: mobile mode home screen -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:configChanges="orientation|screenSize|smallestScreenSize|density|screenLayout|uiMode|keyboard|keyboardHidden|navigation"
+            android:resizeableActivity="true"
+            android:launchMode="singleInstance">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Desktop Mode Activity: triggered when external display detected -->
+        <activity
+            android:name=".DesktopActivity"
+            android:exported="true"
+            android:configChanges="orientation|screenSize|smallestScreenSize|density|screenLayout|uiMode|keyboard|keyboardHidden|navigation"
+            android:resizeableActivity="true"
+            android:launchMode="singleInstance"
+            android:supportsPictureInPicture="false"
+            android:taskAffinity="com.dexpro.desktop">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DESK_DOCK" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- Desktop foreground service -->
+        <service
+            android:name=".service.DesktopService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse" />
+
+        <!-- Settings panel -->
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false"
+            android:resizeableActivity="true"
+            android:theme="@style/Theme.DeXPro" />
+
+        <!-- Extended / Advanced settings -->
+        <activity
+            android:name=".ExtendedSettingsActivity"
+            android:exported="false"
+            android:resizeableActivity="true"
+            android:theme="@style/Theme.DeXPro" />
+
+        <!-- Permission setup wizard -->
+        <activity
+            android:name=".PermissionGuideActivity"
+            android:exported="false"
+            android:resizeableActivity="true"
+            android:theme="@style/Theme.DeXPro" />
+
+        <!-- Cast / screen mirroring -->
+        <activity
+            android:name=".CastActivity"
+            android:exported="false"
+            android:resizeableActivity="true"
+            android:theme="@style/Theme.DeXPro" />
+
+        <!-- Accessibility service for taskbar functionality -->
+        <service
+            android:name=".service.TaskbarAccessibilityService"
+            android:exported="true"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+
+        <!-- Shizuku provider -->
+        <provider
+            android:name="rikka.shizuku.ShizukuProvider"
+            android:authorities="${applicationId}.shizuku"
+            android:exported="true"
+            android:multiprocess="false"
+            android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
+
+    </application>
+</manifest>

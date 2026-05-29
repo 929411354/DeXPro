@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">DeX Pro</string>
+    <string name="desktop_mode">Desktop Mode</string>
+    <string name="start_menu">Start</string>
+    <string name="all_apps">All Apps</string>
+    <string name="switch_to_desktop">Switch to Desktop</string>
+    <string name="switch_to_mobile">Switch to Mobile</string>
+    <string name="quick_settings">Quick Settings</string>
+    <string name="notifications">Notifications</string>
+    <string name="workspace">Workspace</string>
+    <string name="add_workspace">Add Workspace</string>
+    <string name="window_snap_left">Snap Left</string>
+    <string name="window_snap_right">Snap Right</string>
+    <string name="window_maximize">Maximize</string>
+    <string name="window_minimize">Minimize</string>
+    <string name="window_close">Close</string>
+    <string name="permission_required">Permission Required</string>
+    <string name="shizuku_required">Shizuku is required for full functionality. Please install and start Shizuku first.</string>
+    <string name="accessibility_service_desc">DeX Pro uses accessibility service to manage windows and detect running apps.</string>
+    <string name="settings">Settings</string>
+    <string name="permissions">Permissions</string>
+    <string name="search_apps">Search apps...</string>
+    <string name="cast_screen">Cast Screen</string>
+    <string name="add_widget">Add Widget</string>
+</resources>

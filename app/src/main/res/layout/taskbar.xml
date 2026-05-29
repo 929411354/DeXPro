@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/taskbarRoot"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:background="@color/taskbarBackground"
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp">
+
+    <!-- Start button -->
+    <ImageButton
+        android:id="@+id/btnStart"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_dexpro_logo"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/start_menu"
+        android:scaleType="centerInside" />
+
+    <!-- Running apps / pinned apps -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/taskbarAppList"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:clipToPadding="false"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp" />
+
+    <!-- Spacer -->
+    <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!-- System tray area -->
+    <LinearLayout
+        android:id="@+id/systemTrayArea"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <ImageButton
+            android:id="@+id/btnBluetooth"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_bluetooth"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:scaleType="centerInside" />
+
+        <ImageButton
+            android:id="@+id/btnWifi"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_wifi"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:scaleType="centerInside" />
+
+        <ImageButton
+            android:id="@+id/btnCast"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_cast"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:scaleType="centerInside"
+            android:contentDescription="@string/cast_screen" />
+
+        <ImageButton
+            android:id="@+id/btnBattery"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_battery"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:scaleType="centerInside" />
+
+        <TextView
+            android:id="@+id/tvClock"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textColor="@color/onSurface"
+            android:textSize="12sp"
+            android:paddingStart="4dp"
+            android:paddingEnd="8dp" />
+
+        <ImageButton
+            android:id="@+id/btnNotifications"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_notifications"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:scaleType="centerInside" />
+
+        <!-- Expand system tray -->
+        <ImageButton
+            android:id="@+id/btnExpandTray"
+            android:layout_width="16dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_chevron_up"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:scaleType="centerInside" />
+    </LinearLayout>
+</LinearLayout>

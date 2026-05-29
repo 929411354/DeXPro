@@ -1,0 +1,21 @@
+# Gradle
+.gradle/
+build/
+*/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Local
+local.properties
+
+# APK outputs (use GitHub Releases instead)
+*.apk
+*.aab
+
+# OS
+.DS_Store
+Thumbs.db
