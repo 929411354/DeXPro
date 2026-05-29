@@ -323,7 +323,3 @@ class WindowManager(
         return (this * context.resources.displayMetrics.density).toInt()
     }
 }
-
-enum class SnapEdge {
-    LEFT, RIGHT, TOP, BOTTOM, MAXIMIZE, RESTORE
-}

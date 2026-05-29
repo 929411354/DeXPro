@@ -1,84 +1,217 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/desktopRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background">
 
-    <!-- Desktop workspace area (app windows rendered here) -->
+    <!-- Desktop Workspace -->
     <FrameLayout
         android:id="@+id/workspaceContainer"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/taskbar"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="28dp"
+        android:layout_marginBottom="48dp">
 
-        <!-- Widget grid (background layer) -->
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:fillViewport="true">
-
-            <com.dexpro.launcher.widget.WidgetGridLayout
-                android:id="@+id/widgetGrid"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="16dp"
-                android:columnCount="4"
-                android:orientation="horizontal" />
-        </ScrollView>
-
-        <!-- Desktop shortcuts (overlay layer, at top) -->
+        <!-- Desktop shortcut grid -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/desktopShortcuts"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:paddingTop="16dp"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
             android:clipToPadding="false" />
+
+        <!-- Windows will be added here dynamically by DeXWindowManager -->
     </FrameLayout>
 
-    <!-- Taskbar -->
-    <include
-        android:id="@+id/taskbar"
-        layout="@layout/taskbar"
-        android:layout_width="0dp"
-        android:layout_height="48dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- Start Menu overlay -->
-    <include
-        android:id="@+id/startMenu"
-        layout="@layout/start_menu"
-        android:layout_width="360dp"
-        android:layout_height="480dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@id/taskbar"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <!-- System Tray popup -->
-    <include
-        android:id="@+id/systemTray"
-        layout="@layout/system_tray"
-        android:layout_width="360dp"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@id/taskbar"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- Window resize overlay guide -->
-    <View
-        android:id="@+id/resizeOverlay"
+    <!-- Top Status Bar -->
+    <LinearLayout
+        android:id="@+id/statusBar"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"
-        android:background="#00000000" />
+        android:layout_height="28dp"
+        android:layout_gravity="top"
+        android:gravity="center_vertical"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:background="@color/status_bar_bg"
+        android:orientation="horizontal">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            android:id="@+id/tvDesktopClock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="12:00"
+            android:textSize="11sp"
+            android:textColor="@android:color/white" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/tvNetwork"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="WiFi"
+            android:textSize="10sp"
+            android:textColor="@android:color/white"
+            android:alpha="0.7" />
+
+        <TextView
+            android:id="@+id/tvBattery"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:text="100%"
+            android:textSize="10sp"
+            android:textColor="@android:color/white"
+            android:alpha="0.7" />
+
+        <ImageButton
+            android:id="@+id/btnExpandTray"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="6dp"
+            android:src="@android:drawable/arrow_up_float"
+            android:background="@null"
+            android:alpha="0.7" />
+    </LinearLayout>
+
+    <!-- System Tray Panel -->
+    <LinearLayout
+        android:id="@+id/systemTray"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:layout_marginTop="28dp"
+        android:background="#E62C2C2C"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:visibility="gone">
+
+        <ImageButton
+            android:id="@+id/btnBluetooth"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@android:drawable/ic_lock_silent_mode_off"
+            android:background="@null"
+            android:alpha="0.7" />
+
+        <ImageButton
+            android:id="@+id/btnWifi"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@android:drawable/ic_lock_idle_low_battery"
+            android:background="@null"
+            android:alpha="0.7" />
+
+        <ImageButton
+            android:id="@+id/btnCast"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@android:drawable/ic_menu_slideshow"
+            android:background="@null"
+            android:alpha="0.7" />
+
+        <ImageButton
+            android:id="@+id/btnNotifications"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@android:drawable/ic_dialog_email"
+            android:background="@null"
+            android:alpha="0.7" />
+
+        <ImageButton
+            android:id="@+id/btnSettingsQuick"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@android:drawable/ic_menu_preferences"
+            android:background="@null"
+            android:alpha="0.7" />
+
+        <ImageButton
+            android:id="@+id/btnPermissionsQuick"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@android:drawable/ic_menu_manage"
+            android:background="@null"
+            android:alpha="0.7" />
+    </LinearLayout>
+
+    <!-- Start Menu -->
+    <LinearLayout
+        android:id="@+id/startMenu"
+        android:layout_width="280dp"
+        android:layout_height="400dp"
+        android:layout_gravity="bottom|start"
+        android:layout_marginBottom="48dp"
+        android:layout_marginStart="4dp"
+        android:background="#E61C1C1E"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:elevation="12dp">
+
+        <EditText
+            android:id="@+id/etStartMenuSearch"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_margin="8dp"
+            android:background="@drawable/bg_search_rounded"
+            android:hint="@string/search_hint"
+            android:paddingStart="12dp"
+            android:textColor="@android:color/white"
+            android:textColorHint="#80FFFFFF"
+            android:textSize="13sp"
+            android:inputType="textFilter" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/startMenuGrid"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:padding="4dp" />
+    </LinearLayout>
+
+    <!-- Taskbar -->
+    <LinearLayout
+        android:id="@+id/taskbarRoot"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_gravity="bottom"
+        android:gravity="center_vertical"
+        android:background="@color/taskbar_bg"
+        android:orientation="horizontal"
+        android:paddingStart="4dp"
+        android:paddingEnd="8dp">
+
+        <!-- Start Button -->
+        <ImageButton
+            android:id="@+id/btnStart"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@android:drawable/ic_menu_view"
+            android:background="@null"
+            android:alpha="0.8" />
+
+        <!-- Running Apps List -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/taskbarAppList"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="horizontal" />
+
+        <!-- Clock -->
+        <TextView
+            android:id="@+id/tvClock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="12:00"
+            android:textSize="12sp"
+            android:textColor="@android:color/white"
+            android:alpha="0.8" />
+    </LinearLayout>
+
+</FrameLayout>

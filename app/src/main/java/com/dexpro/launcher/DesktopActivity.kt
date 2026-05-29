@@ -1,48 +1,31 @@
 package com.dexpro.launcher
 
-import android.Manifest
-import android.app.ActivityOptions
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.graphics.Rect
-import android.media.AudioManager
+import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
-import android.text.Editable
-import android.text.TextWatcher
-import android.view.ContextMenu
-import android.view.Gravity
-import android.view.MenuItem
+import android.view.LayoutInflater
 import android.view.View
-import android.view.WindowManager as AndroidWindowManager
-import android.widget.EditText
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageButton
-import android.widget.SeekBar
+import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.dexpro.launcher.cast.CastManager
-import com.dexpro.launcher.service.DesktopService
-import com.dexpro.launcher.service.TaskbarAccessibilityService
-import com.dexpro.launcher.ui.DesktopShortcutAdapter
 import com.dexpro.launcher.ui.StartMenuAdapter
-import com.dexpro.launcher.ui.TaskbarAppAdapter
-import com.dexpro.launcher.utils.DisplayHelper
-import com.dexpro.launcher.utils.PermissionsHelper
-import com.dexpro.launcher.utils.ShizukuHelper
-import com.dexpro.launcher.widget.AppWidgetHostManager
-import com.dexpro.launcher.widget.WidgetGridLayout
-import com.dexpro.launcher.window.WindowManager as DeXWindowManager
-import kotlinx.coroutines.delay
+import com.dexpro.launcher.window.WindowDecorator
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -50,808 +33,499 @@ import java.util.Locale
 
 class DesktopActivity : AppCompatActivity() {
 
-    companion object {
-        private const val REQUEST_POST_NOTIFICATIONS = 2001
-        private const val REQUEST_PICK_WIDGET = 3001
-    }
-
-    private lateinit var windowManager: DeXWindowManager
-    private lateinit var displayHelper: DisplayHelper
-    private lateinit var shizukuHelper: ShizukuHelper
-
-    // UI components
-    private lateinit var btnStart: ImageButton
-    private lateinit var btnExpandTray: ImageButton
-    private lateinit var btnNotifications: ImageButton
-    private lateinit var tvClock: TextView
-    private lateinit var taskbarAppList: RecyclerView
-    private lateinit var pinnedAppsList: RecyclerView
-    private lateinit var allAppsList: RecyclerView
+    private lateinit var workspaceContainer: FrameLayout
     private lateinit var desktopShortcuts: RecyclerView
-    private lateinit var etSearch: EditText
+    private lateinit var taskbarRoot: LinearLayout
     private lateinit var startMenuView: View
     private lateinit var systemTrayView: View
-    private lateinit var workspaceContainer: FrameLayout
-    private lateinit var btnPower: ImageButton
-    private lateinit var btnUser: ImageButton
-    private lateinit var btnCast: ImageButton
+    private lateinit var btnStart: ImageButton
+    private lateinit var taskbarAppList: RecyclerView
+    private lateinit var tvClock: TextView
+    private lateinit var startMenuGrid: RecyclerView
+    private lateinit var etStartMenuSearch: android.widget.EditText
 
-    // Widget host
-    private lateinit var widgetHostManager: AppWidgetHostManager
-    private lateinit var widgetGrid: WidgetGridLayout
-    private var pendingWidgetId: Int = -1
-    private var btnAddWidget: ImageButton? = null
+    private lateinit var windowManager: DeXWindowManager
+    private lateinit var permHelper: PermissionsHelper
+    private lateinit var settingsStore: SettingsDataStore
 
-    // System tray controls
-    private lateinit var btnWifi: ImageButton
-    private lateinit var btnBluetooth: ImageButton
-    private lateinit var sliderBrightness: SeekBar
-    private lateinit var sliderVolume: SeekBar
-    private lateinit var tileWifi: View
-    private lateinit var tileBluetooth: View
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val clockFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
+    private val dateFormatter = SimpleDateFormat("MM/dd", Locale.getDefault())
 
-    private val clockFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-    private var isStartMenuOpen = false
-    private var isSystemTrayOpen = false
-    private var installedApps: List<AppInfo> = emptyList()
-    private var filteredApps: List<AppInfo> = emptyList()
-    private var desktopShortcutApps: MutableList<AppInfo> = mutableListOf()
-
-    private lateinit var startMenuAdapter: StartMenuAdapter
-    private lateinit var taskbarAdapter: TaskbarAppAdapter
-    private lateinit var desktopShortcutAdapter: DesktopShortcutAdapter
-    private lateinit var pinnedAppsAdapter: StartMenuAdapter
-
-    // BroadcastReceiver for taskbar updates from accessibility service
-    private val taskbarReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == TaskbarAccessibilityService.ACTION_UPDATE_TASKBAR) {
-                val packageNames = intent.getStringArrayListExtra(
-                    TaskbarAccessibilityService.EXTRA_RUNNING_APPS
-                ) ?: return
-                updateRunningApps(packageNames)
-            }
-        }
-    }
-
-    // Display change receiver
-    private val displayReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == Intent.ACTION_CONFIGURATION_CHANGED) {
-                windowManager.recalculateWindowBounds()
-            }
-        }
-    }
+    private var startMenuAppAdapter: StartMenuAdapter? = null
+    private var allApps: List<AppInfo> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Immersive mode - hide system status bar and nav bar
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        val controller = WindowCompat.getInsetsController(window, window.decorView)
+        controller.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+        controller.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+
         setContentView(R.layout.activity_desktop)
 
-        // Immersive desktop mode — hide status bar for real desktop experience
-        window.decorView.systemUiVisibility = (
-            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-            or View.SYSTEM_UI_FLAG_FULLSCREEN
-            or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-            or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-            or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-            or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-        )
+        settingsStore = SettingsDataStore(this)
+        permHelper = PermissionsHelper(this)
 
-        displayHelper = DisplayHelper(this)
-        shizukuHelper = ShizukuHelper(this)
-        windowManager = DeXWindowManager(this, findViewById(R.id.workspaceContainer))
-        widgetHostManager = AppWidgetHostManager.getInstance(this)
-        widgetGrid = findViewById(R.id.widgetGrid)
-
-        bindViews()
-        setupTaskbar()
-        setupStartMenu()
-        setupSystemTray()
-        setupDesktopShortcuts()
-        setupWidgetGrid()
-        setupCast()
-        loadInstalledApps()
-        loadPinnedApps()
-        loadDesktopShortcuts()
-        startDesktopServiceIfPermitted()
-        startClockUpdate()
-
-        // Register taskbar broadcast receiver
-        val taskbarFilter = IntentFilter(TaskbarAccessibilityService.ACTION_UPDATE_TASKBAR)
-        registerReceiver(taskbarReceiver, taskbarFilter, Context.RECEIVER_NOT_EXPORTED)
-
-        // First-run permission check
-        checkPermissionsOnFirstRun()
-    }
-
-    private fun checkPermissionsOnFirstRun() {
-        val prefs = getSharedPreferences("dexpro_setup", MODE_PRIVATE)
-        val hasShown = prefs.getBoolean("permission_check_shown", false)
-        if (hasShown) return
-
-        val missing = PermissionsHelper.getCriticalMissing(this)
-        if (missing.isNotEmpty()) {
-            val toast = Toast.makeText(
-                this,
-                "Desktop mode needs permissions. Tap user icon in Start menu.",
-                Toast.LENGTH_LONG
-            )
-            toast.show()
-        }
-        prefs.edit().putBoolean("permission_check_shown", true).apply()
-    }
-
-    private fun bindViews() {
-        btnStart = findViewById(R.id.btnStart)
-        btnExpandTray = findViewById(R.id.btnExpandTray)
-        btnNotifications = findViewById(R.id.btnNotifications)
-        tvClock = findViewById(R.id.tvClock)
-        taskbarAppList = findViewById(R.id.taskbarAppList)
-        pinnedAppsList = findViewById(R.id.pinnedAppsList)
-        allAppsList = findViewById(R.id.allAppsList)
+        workspaceContainer = findViewById(R.id.workspaceContainer)
         desktopShortcuts = findViewById(R.id.desktopShortcuts)
+        taskbarRoot = findViewById(R.id.taskbarRoot)
         startMenuView = findViewById(R.id.startMenu)
         systemTrayView = findViewById(R.id.systemTray)
-        workspaceContainer = findViewById(R.id.workspaceContainer)
-        btnWifi = findViewById(R.id.btnWifi)
-        btnBluetooth = findViewById(R.id.btnBluetooth)
 
-        // System tray sliders are inside the included layout
-        sliderBrightness = systemTrayView.findViewById(R.id.sliderBrightness)
-        sliderVolume = systemTrayView.findViewById(R.id.sliderVolume)
-        tileWifi = systemTrayView.findViewById(R.id.tileWifi)
-        tileBluetooth = systemTrayView.findViewById(R.id.tileBluetooth)
+        windowManager = DeXWindowManager(this, workspaceContainer)
 
-        // Search
-        etSearch = startMenuView.findViewById(R.id.etSearch)
+        scope.launch {
+            windowManager.windowLimit = settingsStore.getWindowLimit()
+        }
 
-        // Power button in start menu — opens SettingsActivity
-        btnPower = startMenuView.findViewById(R.id.btnPower)
-        btnPower.setOnClickListener {
+        initTaskbar()
+        initStartMenu()
+        initSystemTray()
+        initDesktop()
+        startClock()
+        setupBackBehavior()
+        loadWallpaper()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshBatteryInfo()
+        refreshNetworkInfo()
+    }
+
+    override fun onDestroy() {
+        scope.cancel()
+        windowManager.release()
+        super.onDestroy()
+    }
+
+    private fun initTaskbar() {
+        btnStart = findViewById(R.id.btnStart)
+        btnStart.setOnClickListener {
+            toggleStartMenu()
+        }
+
+        // Taskbar app list
+        taskbarAppList = findViewById(R.id.taskbarAppList)
+        taskbarAppList.layoutManager =
+            androidx.recyclerview.widget.LinearLayoutManager(this, RecyclerView.HORIZONTAL, false)
+
+        // Running apps adapter
+        val taskAdapter = TaskbarAppAdapter(
+            onAppClick = { pkg -> windowManager.focusWindow(pkg) },
+            onAppClose = { pkg -> windowManager.closeWindow(pkg) }
+        )
+        taskbarAppList.adapter = taskAdapter
+
+        // Observe window list
+        windowManager.windowList.observe(this) { windowList ->
+            taskAdapter.updateApps(windowList)
+        }
+
+        // Settings button in tray
+        findViewById<ImageButton>(R.id.btnSettingsQuick).setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
-            closeStartMenu()
         }
-
-        // User button in start menu — opens permission guide
-        btnUser = startMenuView.findViewById(R.id.btnUser)
-        btnUser.setOnClickListener {
+        findViewById<ImageButton>(R.id.btnPermissionsQuick).setOnClickListener {
             startActivity(Intent(this, PermissionGuideActivity::class.java))
-            closeStartMenu()
         }
-
-        // Cast button in taskbar
-        btnCast = findViewById(R.id.btnCast)
     }
 
-    // ===== TASKBAR SETUP =====
+    private fun initStartMenu() {
+        startMenuView.visibility = View.GONE
 
-    private fun setupTaskbar() {
-        btnStart.setOnClickListener { toggleStartMenu() }
+        // All apps
+        allApps = getInstalledApps()
+        startMenuGrid = startMenuView.findViewById(R.id.startMenuGrid)
+        startMenuGrid.layoutManager = GridLayoutManager(this, 4)
 
-        taskbarAppList.layoutManager = LinearLayoutManager(
-            this, LinearLayoutManager.HORIZONTAL, false
-        )
-        taskbarAdapter = TaskbarAppAdapter(
-            onAppClick = { appInfo -> windowManager.focusWindow(appInfo.packageName) },
-            onAppClose = { appInfo -> windowManager.closeWindow(appInfo.packageName) }
-        )
-        taskbarAppList.adapter = taskbarAdapter
-
-        btnExpandTray.setOnClickListener { toggleSystemTray() }
-        btnNotifications.setOnClickListener {
-            // Expand status bar notifications
-            try {
-                val statusBarManager = getSystemService(Context.STATUS_BAR_SERVICE)
-                val method = statusBarManager.javaClass.getMethod("expandNotificationsPanel")
-                method.invoke(statusBarManager)
-            } catch (e: Exception) {
-                // Fallback: just toggle system tray
-                toggleSystemTray()
-            }
-        }
-
-        // Quick toggle for WiFi/BT in taskbar
-        btnWifi.setOnClickListener { toggleWifi() }
-        btnBluetooth.setOnClickListener { toggleBluetooth() }
-    }
-
-    private fun updateRunningApps(packageNames: List<String>) {
-        val pm = packageManager
-        val appInfos = packageNames.mapNotNull { pkg ->
-            try {
-                val appInfo = pm.getApplicationInfo(pkg, 0)
-                AppInfo(
-                    packageName = pkg,
-                    appName = pm.getApplicationLabel(appInfo).toString(),
-                    icon = pm.getApplicationIcon(appInfo)
-                )
-            } catch (e: Exception) {
-                null
-            }
-        }
-        taskbarAdapter.submitList(appInfos)
-    }
-
-    // ===== SYSTEM TRAY SETUP =====
-
-    private fun setupSystemTray() {
-        // Workspace switcher
-        val wsIds = listOf(R.id.ws1, R.id.ws2, R.id.ws3, R.id.ws4, R.id.btnAddWorkspace)
-        wsIds.forEach { id ->
-            systemTrayView.findViewById<View>(id)?.setOnClickListener { view ->
-                if (view.id == R.id.btnAddWorkspace) {
-                    windowManager.addWorkspace()
-                } else {
-                    val wsNum = when (view.id) {
-                        R.id.ws1 -> 1; R.id.ws2 -> 2
-                        R.id.ws3 -> 3; R.id.ws4 -> 4
-                        else -> 1
-                    }
-                    windowManager.switchWorkspace(wsNum)
-                    updateWorkspaceIndicators()
-                }
-            }
-        }
-
-        // Quick tiles in system tray popup
-        tileWifi.setOnClickListener { toggleWifi() }
-        tileBluetooth.setOnClickListener { toggleBluetooth() }
-
-        // Brightness slider
-        val currentBrightness = try {
-            Settings.System.getInt(contentResolver, Settings.System.SCREEN_BRIGHTNESS)
-        } catch (e: Exception) { 128 }
-        sliderBrightness.max = 255
-        sliderBrightness.progress = currentBrightness
-        sliderBrightness.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) {
-                    // Need WRITE_SETTINGS permission on API 23+
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        if (Settings.System.canWrite(this@DesktopActivity)) {
-                            Settings.System.putInt(
-                                contentResolver,
-                                Settings.System.SCREEN_BRIGHTNESS,
-                                progress
-                            )
-                        } else {
-                            val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
-                            intent.data = android.net.Uri.parse("package:${packageName}")
-                            startActivity(intent)
-                        }
-                    } else {
-                        Settings.System.putInt(
-                            contentResolver,
-                            Settings.System.SCREEN_BRIGHTNESS,
-                            progress
-                        )
-                    }
-                    // Also apply to current window
-                    val layoutParams = window?.attributes
-                    if (layoutParams != null) {
-                        layoutParams.screenBrightness = progress / 255f
-                        window?.attributes = layoutParams
-                    }
-                }
-            }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        startMenuAppAdapter = StartMenuAdapter(allApps, { app ->
+            launchAppInWindow(app)
+            startMenuView.visibility = View.GONE
+        }, { app ->
+            showAppContextMenu(app)
         })
+        startMenuGrid.adapter = startMenuAppAdapter
 
-        // Volume slider
-        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-        val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-        sliderVolume.max = maxVolume
-        sliderVolume.progress = currentVolume
-        sliderVolume.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) {
-                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0)
-                }
-            }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
-    }
-
-    private fun toggleWifi() {
-        // Cannot directly toggle WiFi on modern Android without system permissions.
-        // Open WiFi settings instead.
-        try {
-            startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))
-        } catch (e: Exception) {
-            Toast.makeText(this, "Cannot open WiFi settings", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun toggleBluetooth() {
-        try {
-            startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
-        } catch (e: Exception) {
-            Toast.makeText(this, "Cannot open Bluetooth settings", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    // ===== START MENU SETUP =====
-
-    private fun setupStartMenu() {
-        pinnedAppsList.layoutManager = LinearLayoutManager(
-            this, LinearLayoutManager.HORIZONTAL, false
-        )
-
-        allAppsList.layoutManager = GridLayoutManager(this, 4)
-
-        // Search filtering with TextWatcher
-        etSearch.addTextChangedListener(object : TextWatcher {
+        // Search in start menu
+        etStartMenuSearch = startMenuView.findViewById(R.id.etStartMenuSearch)
+        etStartMenuSearch.addTextChangedListener(object : android.text.TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: Editable?) {
-                val query = s.toString().trim().lowercase()
-                filteredApps = if (query.isEmpty()) {
-                    installedApps
-                } else {
-                    installedApps.filter {
-                        it.appName.lowercase().contains(query) ||
-                        it.packageName.lowercase().contains(query)
-                    }
-                }
-                startMenuAdapter.updateApps(filteredApps)
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val q = s?.toString() ?: ""
+                val filtered = if (q.isBlank()) allApps
+                else allApps.filter { it.appName.contains(q, ignoreCase = true) }
+                startMenuAppAdapter?.updateApps(filtered)
             }
+            override fun afterTextChanged(s: android.text.Editable?) {}
         })
     }
 
-    private fun loadInstalledApps() {
-        val pm = packageManager
-        val mainIntent = Intent(Intent.ACTION_MAIN).apply {
-            addCategory(Intent.CATEGORY_LAUNCHER)
+    private fun initSystemTray() {
+        systemTrayView.visibility = View.GONE
+
+        findViewById<ImageButton>(R.id.btnExpandTray).setOnClickListener {
+            systemTrayView.visibility =
+                if (systemTrayView.visibility == View.VISIBLE) View.GONE else View.VISIBLE
         }
 
-        installedApps = pm.queryIntentActivities(mainIntent, 0).map { resolveInfo ->
-            AppInfo(
-                packageName = resolveInfo.activityInfo.packageName,
-                appName = resolveInfo.loadLabel(pm).toString(),
-                icon = resolveInfo.loadIcon(pm)
-            )
-        }.sortedBy { it.appName.lowercase() }
-        filteredApps = installedApps
-
-        startMenuAdapter = StartMenuAdapter(
-            filteredApps,
-            onAppClick = { appInfo -> launchAppInWindow(appInfo) },
-            onAppLongClick = { appInfo -> addDesktopShortcut(appInfo) }
-        )
-        allAppsList.adapter = startMenuAdapter
-
-        // Register context menu for start menu apps
-        registerForContextMenu(allAppsList)
-    }
-
-    private fun loadPinnedApps() {
-        val pinned = windowManager.getPinnedApps()
-        val pinnedApps = installedApps.filter { pinned.contains(it.packageName) }
-        pinnedAppsAdapter = StartMenuAdapter(
-            pinnedApps,
-            onAppClick = { appInfo -> launchAppInWindow(appInfo) },
-            onAppLongClick = { appInfo -> unpinApp(appInfo) }
-        )
-        pinnedAppsList.adapter = pinnedAppsAdapter
-    }
-
-    private fun loadDesktopShortcuts() {
-        val prefs = getSharedPreferences("dexpro_shortcuts", MODE_PRIVATE)
-        val shortcuts = prefs.getStringSet("shortcut_packages", emptySet()) ?: emptySet()
-        desktopShortcutApps = installedApps.filter {
-            shortcuts.contains(it.packageName)
-        }.toMutableList()
-
-        desktopShortcuts.layoutManager = GridLayoutManager(this, 5)
-        desktopShortcutAdapter = DesktopShortcutAdapter(
-            desktopShortcutApps,
-            onAppClick = { appInfo -> launchAppInWindow(appInfo) },
-            onAppLongClick = { appInfo -> removeDesktopShortcut(appInfo) }
-        )
-        desktopShortcuts.adapter = desktopShortcutAdapter
-        registerForContextMenu(desktopShortcuts)
-    }
-
-    // ===== DESKTOP SHORTCUTS =====
-
-    private fun setupDesktopShortcuts() {
-        // Context menu registration done in loadDesktopShortcuts
-    }
-
-    // ===== WIDGET GRID =====
-
-    private fun setupWidgetGrid() {
-        // Restore previously added widgets
-        val restoredViews = widgetHostManager.restoreWidgets()
-        for (view in restoredViews) {
-            widgetGrid.addWidget(view)
+        // Bluetooth toggle
+        findViewById<ImageButton>(R.id.btnBluetooth).setOnClickListener {
+            val btIntent = Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS)
+            startActivity(btIntent)
         }
 
-        // Build "Add Widget" button
-        btnAddWidget = ImageButton(this).apply {
-            setImageResource(android.R.drawable.ic_input_add)
-            setBackgroundColor(getColor(R.color.bg_btn_secondary))
-            setOnClickListener {
-                try {
-                    pendingWidgetId = widgetHostManager.openWidgetPicker(this@DesktopActivity)
-                } catch (e: Exception) {
-                    Toast.makeText(
-                        this@DesktopActivity,
-                        "Cannot open widget picker: ${e.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+        // WiFi toggle
+        findViewById<ImageButton>(R.id.btnWifi).setOnClickListener {
+            val wifiIntent = Intent(android.provider.Settings.ACTION_WIFI_SETTINGS)
+            startActivity(wifiIntent)
+        }
+
+        // Cast
+        findViewById<ImageButton>(R.id.btnCast).setOnClickListener {
+            val castIntent = Intent(android.provider.Settings.ACTION_CAST_SETTINGS)
+            try { startActivity(castIntent) } catch (_: Exception) {
+                Toast.makeText(this, R.string.cast_not_supported, Toast.LENGTH_SHORT).show()
             }
         }
-        val addBtnParams = widgetGrid.getButtonLayoutParams()
-        widgetGrid.addView(btnAddWidget, addBtnParams)
+
+        // Notifications
+        findViewById<ImageButton>(R.id.btnNotifications).setOnClickListener {
+            openNotificationPanel()
+        }
     }
 
-    // ===== CAST =====
+    private fun initDesktop() {
+        // Desktop shortcuts grid
+        val spacing = resources.getDimensionPixelSize(R.dimen.desktop_item_spacing)
+        desktopShortcuts.addItemDecoration(
+            androidx.recyclerview.widget.GridLayoutManager(this, 4).let {
+                desktopShortcuts.layoutManager = it
+                object : androidx.recyclerview.widget.RecyclerView.ItemDecoration() {
+                    override fun getItemOffsets(
+                        outRect: android.graphics.Rect,
+                        view: View,
+                        parent: RecyclerView,
+                        state: RecyclerView.State
+                    ) {
+                        outRect.set(spacing / 2, spacing / 2, spacing / 2, spacing / 2)
+                    }
+                }
+            }
+        )
 
-    private fun setupCast() {
-        btnCast.setOnClickListener {
-            startActivity(Intent(this, CastActivity::class.java))
+        // Show pinned apps on desktop
+        desktopShortcuts.adapter = DesktopShortcutAdapter(
+            windowManager.getPinnedApps().toList(),
+            onAppClick = { pkg ->
+                val info = allApps.find { it.packageName == pkg }
+                if (info != null) launchAppInWindow(info)
+                else {
+                    windowManager.addWindow(pkg)
+                    addDecoratorForWindow(pkg)
+                }
+            },
+            onAppRemove = { pkg -> windowManager.unpinApp(pkg) }
+        )
+
+        // Long press for context menu
+        workspaceContainer.setOnLongClickListener {
+            showDesktopContextMenu()
+            true
         }
+    }
+
+    private fun showDesktopContextMenu() {
+        val items = arrayOf(
+            getString(R.string.menu_change_wallpaper),
+            getString(R.string.menu_add_widget),
+            getString(R.string.menu_desktop_settings)
+        )
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(R.string.desktop_menu_title)
+            .setItems(items) { _, which ->
+                when (which) {
+                    0 -> pickWallpaper()
+                    1 -> Toast.makeText(this, R.string.widget_coming_soon, Toast.LENGTH_SHORT).show()
+                    2 -> startActivity(Intent(this, SettingsActivity::class.java))
+                }
+            }
+            .show()
+    }
+
+    private fun launchAppInWindow(app: AppInfo) {
+        windowManager.launchApp(app)
+        // Create and add a WindowDecorator overlay
+        addDecoratorForWindow(app.packageName)
+    }
+
+    private fun addDecoratorForWindow(packageName: String) {
+        val decorator = WindowDecorator(this, windowManager, packageName)
+        windowManager.registerDecorator(packageName, decorator)
+        decorator.updatePosition()
+        workspaceContainer.addView(decorator)
+    }
+
+    private fun getInstalledApps(): List<AppInfo> {
+        val pm = packageManager
+        val intent = Intent(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_LAUNCHER) }
+        return pm.queryIntentActivities(intent, 0).mapNotNull { ri ->
+            try {
+                val ap = ri.activityInfo
+                AppInfo(
+                    packageName = ap.packageName,
+                    appName = ap.loadLabel(pm).toString(),
+                    icon = ap.loadIcon(pm)
+                )
+            } catch (_: Exception) { null }
+        }.sortedBy { it.appName.lowercase() }
+    }
+
+    private fun showAppContextMenu(app: AppInfo) {
+        val items = arrayOf(
+            getString(R.string.menu_open_window),
+            getString(R.string.menu_pin_to_desktop),
+            getString(R.string.menu_app_info)
+        )
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(app.appName)
+            .setItems(items) { _, which ->
+                when (which) {
+                    0 -> launchAppInWindow(app)
+                    1 -> {
+                        windowManager.pinApp(app)
+                        Toast.makeText(this, "已固定到桌面", Toast.LENGTH_SHORT).show()
+                    }
+                    2 -> openAppInfo(app.packageName)
+                }
+            }
+            .show()
+    }
+
+    private fun openAppInfo(pkg: String) {
+        startActivity(Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = android.net.Uri.parse("package:$pkg")
+        })
+    }
+
+    private fun toggleStartMenu() {
+        startMenuView.visibility =
+            if (startMenuView.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+        if (startMenuView.visibility == View.VISIBLE) {
+            etStartMenuSearch.text.clear()
+            startMenuAppAdapter?.updateApps(allApps)
+        }
+    }
+
+    private fun openNotificationPanel() {
+        try {
+            @Suppress("DEPRECATION")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                windowManager.focusedPackage?.let { pkg ->
+                    // Try opening notification settings for focused window
+                    val intent = Intent("android.settings.APP_NOTIFICATION_SETTINGS").apply {
+                        putExtra("app_package", pkg)
+                        putExtra("android.provider.extra.APP_PACKAGE", pkg)
+                    }
+                    startActivity(intent)
+                } ?: run {
+                    startActivity(Intent("android.settings.NOTIFICATION_SETTINGS"))
+                }
+            }
+        } catch (_: Exception) {}
+    }
+
+    private fun refreshBatteryInfo() {
+        val bm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getSystemService(BATTERY_SERVICE) as? BatteryManager
+        } else null
+        val level = bm?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) ?: -1
+        val tvBattery = findViewById<TextView>(R.id.tvBattery)
+        tvBattery.text = if (level > 0) "$level%" else "---"
+    }
+
+    private fun refreshNetworkInfo() {
+        val cm = getSystemService(CONNECTIVITY_SERVICE) as? android.net.ConnectivityManager
+        val nw = cm?.activeNetworkInfo
+        val tvNetwork = findViewById<TextView>(R.id.tvNetwork)
+        tvNetwork.text = when {
+            nw == null || !nw.isConnected -> "离线"
+            nw.type == android.net.ConnectivityManager.TYPE_WIFI -> "WiFi"
+            nw.type == android.net.ConnectivityManager.TYPE_MOBILE -> "5G"
+            else -> ""
+        }
+    }
+
+    private fun pickWallpaper() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "image/*"
+        }
+        startActivityForResult(intent, 100)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-
-        if (requestCode == REQUEST_PICK_WIDGET) {
-            val success = widgetHostManager.handlePickerResult(
-                this, AppWidgetHostManager.REQUEST_BIND_WIDGET, resultCode, data
-            )
-            if (success) {
-                // Remove old button, add widget, re-add button
-                refreshWidgetGrid()
-                Toast.makeText(this, "Widget added", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    private fun refreshWidgetGrid() {
-        widgetGrid.removeAllViews()
-        val restoredViews = widgetHostManager.restoreWidgets()
-        for (view in restoredViews) {
-            widgetGrid.addWidget(view)
-        }
-        btnAddWidget = ImageButton(this).apply {
-            setImageResource(android.R.drawable.ic_input_add)
-            setBackgroundColor(getColor(R.color.bg_btn_secondary))
-            setOnClickListener {
-                try {
-                    pendingWidgetId = widgetHostManager.openWidgetPicker(this@DesktopActivity)
-                } catch (e: Exception) {
-                    Toast.makeText(
-                        this@DesktopActivity,
-                        "Cannot open widget picker: ${e.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-        }
-        val addBtnParams = widgetGrid.getButtonLayoutParams()
-        widgetGrid.addView(btnAddWidget, addBtnParams)
-    }
-
-    private fun addDesktopShortcut(appInfo: AppInfo) {
-        if (desktopShortcutApps.none { it.packageName == appInfo.packageName }) {
-            desktopShortcutApps.add(appInfo)
-            desktopShortcutAdapter.notifyItemInserted(desktopShortcutApps.size - 1)
-            saveDesktopShortcuts()
-        }
-    }
-
-    private fun removeDesktopShortcut(appInfo: AppInfo) {
-        desktopShortcutApps.removeAll { it.packageName == appInfo.packageName }
-        desktopShortcutAdapter.notifyDataSetChanged()
-        saveDesktopShortcuts()
-    }
-
-    private fun saveDesktopShortcuts() {
-        val prefs = getSharedPreferences("dexpro_shortcuts", MODE_PRIVATE)
-        prefs.edit().putStringSet(
-            "shortcut_packages",
-            desktopShortcutApps.map { it.packageName }.toSet()
-        ).apply()
-    }
-
-    // ===== CONTEXT MENU =====
-
-    override fun onCreateContextMenu(
-        menu: ContextMenu, v: View, menuInfo: ContextMenu.ContextMenuInfo?
-    ) {
-        super.onCreateContextMenu(menu, v, menuInfo)
-        when (v.id) {
-            R.id.allAppsList -> {
-                menu.add(0, 101, 0, "Create Desktop Shortcut")
-            }
-            R.id.desktopShortcuts -> {
-                menu.add(0, 201, 0, "Open")
-                menu.add(0, 202, 0, "Remove from Desktop")
-                menu.add(0, 203, 0, "App Info")
-            }
-        }
-    }
-
-    override fun onContextItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            201 -> {
-                // Open app (handled by click already, context menu info parsing needed)
-                true
-            }
-            202 -> {
-                // Remove from desktop
-                val menuInfo = item.menuInfo as? android.widget.AdapterView.AdapterContextMenuInfo
-                if (menuInfo != null && menuInfo.position < desktopShortcutApps.size) {
-                    removeDesktopShortcut(desktopShortcutApps[menuInfo.position])
-                }
-                true
-            }
-            203 -> {
-                // App info
-                val menuInfo = item.menuInfo as? android.widget.AdapterView.AdapterContextMenuInfo
-                if (menuInfo != null && menuInfo.position < desktopShortcutApps.size) {
-                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                    intent.data = android.net.Uri.parse("package:${desktopShortcutApps[menuInfo.position].packageName}")
-                    startActivity(intent)
-                }
-                true
-            }
-            else -> super.onContextItemSelected(item)
-        }
-    }
-
-    // ===== APP LAUNCH WITH THREE-TIER FALLBACK =====
-
-    private fun launchAppInWindow(appInfo: AppInfo) {
-        try {
-            val launchIntent = packageManager.getLaunchIntentForPackage(appInfo.packageName)
-                ?: return
-
-            launchIntent.addFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK
-            )
-
-            val screenWidth = resources.displayMetrics.widthPixels
-            val screenHeight = resources.displayMetrics.heightPixels
-            val windowWidth = (screenWidth * 0.6).toInt()
-            val windowHeight = (screenHeight * 0.6).toInt()
-            val left = (screenWidth - windowWidth) / 2
-            val top = 40
-            val bounds = Rect(left, top, left + windowWidth, top + windowHeight)
-
-            // Tier 1: Shizuku Freeform
-            if (shizukuHelper.isShizukuAvailable()) {
-                val success = shizukuHelper.launchInFreeform(appInfo.packageName, bounds)
-                if (success) {
-                    windowManager.addWindow(appInfo.packageName, bounds)
-                    closeStartMenu()
-                    return
-                }
-            }
-
-            // Tier 2: setLaunchBounds via ActivityOptions (Android N+)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                val options = ActivityOptions.makeBasic().apply {
-                    launchBounds = bounds
-                }
-                startActivity(launchIntent, options.toBundle())
-                windowManager.addWindow(appInfo.packageName, bounds)
-                closeStartMenu()
-                return
-            }
-
-            // Tier 3: Fullscreen fallback
-            startActivity(launchIntent)
-            windowManager.addWindow(appInfo.packageName)
-            closeStartMenu()
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Toast.makeText(this, "Failed to launch ${appInfo.appName}", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun unpinApp(appInfo: AppInfo) {
-        val prefs = getSharedPreferences("dexpro_pins", MODE_PRIVATE)
-        val pinned = prefs.getStringSet("pinned", emptySet())?.toMutableSet() ?: mutableSetOf()
-        pinned.remove(appInfo.packageName)
-        prefs.edit().putStringSet("pinned", pinned).apply()
-        loadPinnedApps()
-    }
-
-    // ===== TOGGLES =====
-
-    private fun toggleStartMenu() {
-        isStartMenuOpen = !isStartMenuOpen
-        startMenuView.visibility = if (isStartMenuOpen) View.VISIBLE else View.GONE
-        if (isStartMenuOpen) {
-            isSystemTrayOpen = false
-            systemTrayView.visibility = View.GONE
-        }
-    }
-
-    private fun closeStartMenu() {
-        isStartMenuOpen = false
-        startMenuView.visibility = View.GONE
-    }
-
-    private fun toggleSystemTray() {
-        isSystemTrayOpen = !isSystemTrayOpen
-        systemTrayView.visibility = if (isSystemTrayOpen) View.VISIBLE else View.GONE
-        if (isSystemTrayOpen) {
-            isStartMenuOpen = false
-            startMenuView.visibility = View.GONE
-            // Refresh volume slider
-            val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-            sliderVolume.progress = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-        }
-    }
-
-    private fun updateWorkspaceIndicators() {
-        val wsMap = mapOf(1 to R.id.ws1, 2 to R.id.ws2, 3 to R.id.ws3, 4 to R.id.ws4)
-        val currentWs = windowManager.getCurrentWorkspace()
-        wsMap.forEach { (ws, id) ->
-            val view = systemTrayView.findViewById<TextView>(id)
-            view.setTextColor(
-                if (ws == currentWs) getColor(R.color.onPrimary)
-                else getColor(R.color.onSurface)
-            )
-            view.background = if (ws == currentWs)
-                getDrawable(R.drawable.bg_workspace_active)
-            else
-                getDrawable(R.drawable.bg_workspace)
-        }
-    }
-
-    // ===== CLOCK UPDATE =====
-
-    private fun startClockUpdate() {
-        lifecycleScope.launch {
-            while (true) {
-                val now = Date()
-                tvClock.text = clockFormat.format(now)
-                delay(1000)
-            }
-        }
-    }
-
-    private fun startDesktopServiceIfPermitted() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
-                != PackageManager.PERMISSION_GRANTED
-            ) {
-                requestPermissions(
-                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                    REQUEST_POST_NOTIFICATIONS
+        if (requestCode == 100 && resultCode == RESULT_OK) {
+            data?.data?.let { uri ->
+                // Persist permission
+                contentResolver.takePersistableUriPermission(
+                    uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
                 )
-                return
+                scope.launch {
+                    settingsStore.setWallpaperUri(uri.toString())
+                }
+                loadWallpaperImage(uri.toString())
             }
-        }
-        startDesktopService()
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_POST_NOTIFICATIONS) {
-            // Start service regardless of grant result — it will fall back gracefully
-            startDesktopService()
         }
     }
 
-    private fun startDesktopService() {
-        val serviceIntent = Intent(this, DesktopService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(serviceIntent)
-        } else {
-            startService(serviceIntent)
+    private fun loadWallpaper() {
+        scope.launch {
+            val uri = settingsStore.getWallpaperUri()
+            if (uri.isNotEmpty()) {
+                loadWallpaperImage(uri)
+            }
         }
     }
 
-    // ===== KEYBOARD SHORTCUTS (all 10) =====
+    private fun loadWallpaperImage(uriString: String) {
+        try {
+            val uri = android.net.Uri.parse(uriString)
+            workspaceContainer.background = android.graphics.drawable.BitmapDrawable(
+                resources,
+                android.provider.MediaStore.Images.Media.getBitmap(contentResolver, uri)
+            )
+        } catch (_: Exception) {}
+    }
 
-    override fun onKeyDown(keyCode: Int, event: android.view.KeyEvent): Boolean {
-        return when {
-            // 1. Win key: toggle start menu
-            keyCode == android.view.KeyEvent.KEYCODE_META_LEFT ||
-            keyCode == android.view.KeyEvent.KEYCODE_META_RIGHT -> {
-                toggleStartMenu()
-                true
+    private fun startClock() {
+        tvClock = findViewById(R.id.tvClock)
+        val handler = android.os.Handler(android.os.Looper.getMainLooper())
+        val runnable = object : Runnable {
+            override fun run() {
+                tvClock.text = clockFormatter.format(Date())
+                handler.postDelayed(this, 30000)
             }
-            // 2. Alt+Tab: cycle windows
-            event.isAltPressed && keyCode == android.view.KeyEvent.KEYCODE_TAB -> {
-                windowManager.cycleWindows()
-                true
-            }
-            // 3. Escape: close start menu or minimize current window
-            keyCode == android.view.KeyEvent.KEYCODE_ESCAPE -> {
-                if (isStartMenuOpen) closeStartMenu()
-                else if (isSystemTrayOpen) toggleSystemTray()
-                else windowManager.minimizeCurrentWindow()
-                true
-            }
-            // 4. Win+D: minimize all windows (show desktop)
-            event.isMetaPressed && keyCode == android.view.KeyEvent.KEYCODE_D -> {
-                windowManager.minimizeAll()
-                true
-            }
-            // 5. Win+E: open file explorer
-            event.isMetaPressed && keyCode == android.view.KeyEvent.KEYCODE_E -> {
-                try {
-                    val intent = Intent(Intent.ACTION_MAIN).apply {
-                        addCategory(Intent.CATEGORY_APP_FILES)
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    }
-                    startActivity(intent)
-                } catch (_: Exception) {}
-                true
-            }
-            // 6. Win+Left: snap current window left
-            event.isMetaPressed && keyCode == android.view.KeyEvent.KEYCODE_DPAD_LEFT -> {
-                windowManager.focusedPackage?.let {
-                    windowManager.snapWindow(it, com.dexpro.launcher.window.SnapEdge.LEFT)
-                }
-                true
-            }
-            // 7. Win+Right: snap current window right
-            event.isMetaPressed && keyCode == android.view.KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                windowManager.focusedPackage?.let {
-                    windowManager.snapWindow(it, com.dexpro.launcher.window.SnapEdge.RIGHT)
-                }
-                true
-            }
-            // 8. Win+Up: maximize current window
-            event.isMetaPressed && keyCode == android.view.KeyEvent.KEYCODE_DPAD_UP -> {
-                windowManager.focusedPackage?.let {
-                    windowManager.snapWindow(it, com.dexpro.launcher.window.SnapEdge.MAXIMIZE)
-                }
-                true
-            }
-            // 9. Win+Down: restore/minimize current window
-            event.isMetaPressed && keyCode == android.view.KeyEvent.KEYCODE_DPAD_DOWN -> {
-                windowManager.focusedPackage?.let {
-                    val meta = windowManager.getWindowMeta(it)
-                    if (meta?.isMaximized == true) {
-                        windowManager.snapWindow(it, com.dexpro.launcher.window.SnapEdge.RESTORE)
-                    } else {
-                        windowManager.minimizeCurrentWindow()
-                    }
-                }
-                true
-            }
-            // 10. Alt+F4: close current window
-            event.isAltPressed && keyCode == android.view.KeyEvent.KEYCODE_F4 -> {
-                windowManager.focusedPackage?.let { windowManager.closeWindow(it) }
-                true
-            }
-            else -> super.onKeyDown(keyCode, event)
+        }
+        handler.post(runnable)
+    }
+
+    private fun setupBackBehavior() {
+        // Back key behavior: go back to MainActivity, not exit
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.desktopRoot)) { _, insets ->
+            insets
         }
     }
 
-    // ===== LIFECYCLE =====
+    override fun onBackPressed() {
+        // Close start menu if open
+        if (startMenuView.visibility == View.VISIBLE) {
+            startMenuView.visibility = View.GONE
+            return
+        }
+        if (systemTrayView.visibility == View.VISIBLE) {
+            systemTrayView.visibility = View.GONE
+            return
+        }
 
-    override fun onStart() {
-        super.onStart()
-        registerReceiver(displayReceiver, IntentFilter(Intent.ACTION_CONFIGURATION_CHANGED))
-        widgetHostManager.startListening()
+        // If windows are open, minimize all
+        if (windowManager.hasWindows()) {
+            windowManager.minimizeAllWindows()
+            return
+        }
+
+        // Go back to MainActivity (phone launcher mode)
+        val intent = Intent(this, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
+        startActivity(intent)
+    }
+}
+
+// Taskbar running app adapter
+class TaskbarAppAdapter(
+    private val onAppClick: (String) -> Unit,
+    private val onAppClose: (String) -> Unit
+) : RecyclerView.Adapter<TaskbarAppAdapter.VH>() {
+
+    private var apps: List<String> = emptyList()
+
+    inner class VH(view: View) : RecyclerView.ViewHolder(view) {
+        val iconView: ImageView = view.findViewById(R.id.ivTaskAppIcon)
+        val closeButton: ImageButton = view.findViewById(R.id.btnCloseTaskApp)
     }
 
-    override fun onStop() {
-        super.onStop()
-        try { unregisterReceiver(displayReceiver) } catch (_: Exception) {}
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_taskbar_app, parent, false)
+        return VH(view)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        try { unregisterReceiver(taskbarReceiver) } catch (_: Exception) {}
-        windowManager.release()
+    override fun onBindViewHolder(holder: VH, position: Int) {
+        val pkg = apps[position]
+        try {
+            val ctx = holder.itemView.context
+            val icon = ctx.packageManager.getApplicationIcon(pkg)
+            holder.iconView.setImageDrawable(icon)
+        } catch (_: Exception) {}
+
+        holder.iconView.setOnClickListener { onAppClick(pkg) }
+        holder.closeButton.setOnClickListener { onAppClose(pkg) }
+    }
+
+    override fun getItemCount(): Int = apps.size
+
+    fun updateApps(newApps: List<String>) {
+        apps = newApps
+        notifyDataSetChanged()
+    }
+}
+
+// Desktop shortcut adapter
+class DesktopShortcutAdapter(
+    private var apps: List<String>,
+    private val onAppClick: (String) -> Unit,
+    private val onAppRemove: (String) -> Unit
+) : RecyclerView.Adapter<DesktopShortcutAdapter.VH>() {
+
+    inner class VH(view: View) : RecyclerView.ViewHolder(view) {
+        val iconView: ImageView = view.findViewById(R.id.ivAppIcon)
+        val nameView: TextView = view.findViewById(R.id.tvAppName)
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_app_icon, parent, false)
+        return VH(view)
+    }
+
+    override fun onBindViewHolder(holder: VH, position: Int) {
+        val pkg = apps[position]
+        val ctx = holder.itemView.context
+        try {
+            val pm = ctx.packageManager
+            val info = pm.getApplicationInfo(pkg, 0)
+            holder.iconView.setImageDrawable(info.loadIcon(pm))
+            holder.nameView.text = info.loadLabel(pm).toString()
+        } catch (_: Exception) {
+            holder.nameView.text = pkg
+        }
+        holder.itemView.setOnClickListener { onAppClick(pkg) }
+        holder.itemView.setOnLongClickListener {
+            onAppRemove(pkg)
+            true
+        }
+    }
+
+    override fun getItemCount(): Int = apps.size
+
+    fun updateList(list: List<String>) {
+        apps = list
+        notifyDataSetChanged()
     }
 }

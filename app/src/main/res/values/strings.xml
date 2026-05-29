@@ -1,25 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- General -->
     <string name="app_name">DeX Pro</string>
-    <string name="desktop_mode">Desktop Mode</string>
-    <string name="start_menu">Start</string>
-    <string name="all_apps">All Apps</string>
-    <string name="switch_to_desktop">Switch to Desktop</string>
-    <string name="switch_to_mobile">Switch to Mobile</string>
-    <string name="quick_settings">Quick Settings</string>
-    <string name="notifications">Notifications</string>
-    <string name="workspace">Workspace</string>
-    <string name="add_workspace">Add Workspace</string>
-    <string name="window_snap_left">Snap Left</string>
-    <string name="window_snap_right">Snap Right</string>
-    <string name="window_maximize">Maximize</string>
-    <string name="window_minimize">Minimize</string>
-    <string name="window_close">Close</string>
-    <string name="permission_required">Permission Required</string>
-    <string name="shizuku_required">Shizuku is required for full functionality. Please install and start Shizuku first.</string>
-    <string name="accessibility_service_desc">DeX Pro uses accessibility service to manage windows and detect running apps.</string>
-    <string name="settings">Settings</string>
-    <string name="permissions">Permissions</string>
-    <string name="search_apps">Search apps...</string>
-    <string name="cast_screen">Cast Screen</string>
-    <string name="add_widget">Add Widget</string>
+    <string name="search_hint">搜索应用…</string>
+    <string name="permission_center">权限中心</string>
+    <string name="settings">设置</string>
+    <string name="enter_desktop">进入桌面</string>
+
+    <!-- Permission Guide -->
+    <string name="permission_wizard_title">权限授权向导</string>
+    <string name="permission_wizard_desc">DeX Pro 桌面模式需要以下权限才能提供完整的 PC 级窗口体验。请逐项授权。</string>
+    <string name="permission_required_title">权限未授权</string>
+    <string name="go_grant">去授权</string>
+    <string name="granted">已授权</string>
+    <string name="later">稍后</string>
+    <string name="skip">跳过</string>
+    <string name="all_done_enter_desktop">全部完成，进入桌面</string>
+    <string name="enter_desktop_anyway">仍然进入</string>
+    <string name="continue_grant">继续授权</string>
+    <string name="permission_incomplete_title">权限不完整</string>
+
+    <!-- Context Menu -->
+    <string name="menu_open">打开</string>
+    <string name="menu_small_window">小窗打开</string>
+    <string name="menu_app_info">应用信息</string>
+    <string name="menu_open_window">以窗口打开</string>
+    <string name="menu_pin_to_desktop">固定到桌面</string>
+    <string name="menu_change_wallpaper">更换壁纸</string>
+    <string name="menu_add_widget">添加 Widget</string>
+    <string name="menu_desktop_settings">桌面设置</string>
+    <string name="desktop_menu_title">桌面菜单</string>
+
+    <!-- Settings -->
+    <string name="window_management">窗口管理</string>
+    <string name="max_windows">最大窗口数</string>
+    <string name="animation_speed">窗口动画速度</string>
+    <string name="fast">快</string>
+    <string name="normal">正常</string>
+    <string name="slow">慢</string>
+    <string name="aero_snap">Aero Snap 窗口吸附</string>
+    <string name="desktop">桌面</string>
+    <string name="desktop_columns">桌面列数</string>
+    <string name="desktop_rows">桌面行数</string>
+    <string name="icon_size">图标大小</string>
+    <string name="small">小</string>
+    <string name="medium">中</string>
+    <string name="large">大</string>
+    <string name="change_wallpaper">选择壁纸</string>
+    <string name="taskbar">任务栏</string>
+    <string name="dock_position">任务栏位置</string>
+    <string name="bottom">底部</string>
+    <string name="left">左侧</string>
+    <string name="right">右侧</string>
+    <string name="auto_hide_taskbar">自动隐藏任务栏</string>
+    <string name="show_system_tray">显示系统托盘</string>
+    <string name="behavior">行为</string>
+    <string name="default_launch_mode">默认启动模式</string>
+    <string name="phone_mode">手机模式</string>
+    <string name="desktop_mode">桌面模式</string>
+    <string name="back_key_behavior">返回键行为</string>
+    <string name="minimize">最小化</string>
+    <string name="exit">退出</string>
+    <string name="dark_mode">深色模式</string>
+    <string name="about">关于</string>
+    <string name="app_version">版本号</string>
+    <string name="github_link">GitHub</string>
+    <string name="open_source_license">开源许可</string>
+
+    <!-- Misc -->
+    <string name="widget_coming_soon">Widget 功能开发中</string>
+    <string name="cast_not_supported">投屏功能不可用</string>
+    <string name="accessibility_service_desc">前台应用状态监控服务，用于任务栏窗口切换</string>
+    <string name="start_menu">开始菜单</string>
+    <string name="cast_screen">投屏</string>
 </resources>

@@ -44,7 +44,7 @@
             </intent-filter>
         </activity>
 
-        <!-- Desktop Mode Activity: triggered when external display detected -->
+        <!-- Desktop Mode Activity: works on phone directly without external display -->
         <activity
             android:name=".DesktopActivity"
             android:exported="true"
@@ -55,7 +55,6 @@
             android:taskAffinity="com.dexpro.desktop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.DESK_DOCK" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>

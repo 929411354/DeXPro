@@ -1,25 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="40dp"
     android:layout_height="40dp"
-    android:layout_marginStart="2dp"
-    android:layout_marginEnd="2dp"
-    android:background="?attr/selectableItemBackground">
+    android:gravity="center"
+    android:orientation="vertical"
+    android:layout_marginHorizontal="2dp">
 
-    <ImageView
-        android:id="@+id/ivTaskbarIcon"
-        android:layout_width="28dp"
-        android:layout_height="28dp"
-        android:layout_gravity="center"
-        android:scaleType="fitCenter" />
+    <FrameLayout
+        android:layout_width="36dp"
+        android:layout_height="36dp">
 
-    <View
-        android:id="@+id/vActiveIndicator"
-        android:layout_width="20dp"
-        android:layout_height="3dp"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="2dp"
-        android:background="@color/accentBlue"
-        android:visibility="visible" />
-</FrameLayout>
+        <ImageView
+            android:id="@+id/ivTaskAppIcon"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="center" />
+
+        <ImageButton
+            android:id="@+id/btnCloseTaskApp"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:layout_gravity="top|end"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:background="@null"
+            android:alpha="0.6" />
+    </FrameLayout>
+</LinearLayout>

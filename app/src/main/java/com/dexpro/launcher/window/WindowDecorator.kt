@@ -12,22 +12,13 @@ import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import androidx.core.view.isVisible
+import com.dexpro.launcher.DeXWindowManager
 import com.dexpro.launcher.R
 
-/**
- * Window decorator providing title bar, resize handles, and window controls.
- *
- * Renders on top of freeform windows to provide desktop-like window management:
- * - Title bar with app icon and name
- * - Minimize / maximize / close buttons
- * - Resize handles (8 directions)
- * - Aero Snap visual feedback
- * - Shadow / border rendering
- */
 class WindowDecorator(
     context: Context,
-    private val windowManager: WindowManager,
-    private val packageName: String
+    private val windowManager: DeXWindowManager,
+    val packageName: String
 ) : FrameLayout(context) {
 
     companion object {
@@ -46,7 +37,7 @@ class WindowDecorator(
         )
     }
 
-    private val titleText = android.widget.TextView(context).apply {
+    val titleText = android.widget.TextView(context).apply {
         text = packageName
         setTextColor(Color.WHITE)
         layoutParams = LinearLayout.LayoutParams(
@@ -91,7 +82,7 @@ class WindowDecorator(
     }
 
     private val borderPaint = Paint().apply {
-        color = Color.parseColor("#3F51B5") // Material Blue 500
+        color = Color.parseColor("#3F51B5")
         strokeWidth = BORDER_WIDTH
         style = Paint.Style.STROKE
         isAntiAlias = true
@@ -132,28 +123,14 @@ class WindowDecorator(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-
-        // Draw shadow
-        canvas.drawRoundRect(
-            0f, 0f,
-            width.toFloat(), height.toFloat(),
-            SHADOW_RADIUS, SHADOW_RADIUS,
-            shadowPaint
-        )
-
-        // Draw border
-        canvas.drawRoundRect(
-            BORDER_WIDTH / 2, BORDER_WIDTH / 2,
+        canvas.drawRoundRect(0f, 0f, width.toFloat(), height.toFloat(),
+            SHADOW_RADIUS, SHADOW_RADIUS, shadowPaint)
+        canvas.drawRoundRect(BORDER_WIDTH / 2, BORDER_WIDTH / 2,
             width - BORDER_WIDTH / 2, height - BORDER_WIDTH / 2,
-            SHADOW_RADIUS, SHADOW_RADIUS,
-            borderPaint
-        )
+            SHADOW_RADIUS, SHADOW_RADIUS, borderPaint)
 
-        // Draw resize handles
         if (windowManager.getWindowMeta(packageName)?.isMaximized != true) {
-            resizeHandles.forEach { handle ->
-                handle.draw(canvas, this)
-            }
+            resizeHandles.forEach { handle -> handle.draw(canvas, this) }
         }
     }
 
@@ -161,83 +138,58 @@ class WindowDecorator(
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 if (isInTitleBar(event.x, event.y)) {
-                    startDragging(event)
-                    return true
+                    startDragging(event); return true
                 }
                 val edge = getResizeEdgeAt(event.x, event.y)
-                if (edge != null) {
-                    startResizing(event, edge)
-                    return true
-                }
+                if (edge != null) { startResizing(event, edge); return true }
             }
             MotionEvent.ACTION_MOVE -> {
                 if (isDragging) {
-                    val dx = event.x - dragStartX
-                    val dy = event.y - dragStartY
+                    val dx = event.x - dragStartX; val dy = event.y - dragStartY
                     moveWindow(dx.toInt(), dy.toInt())
-                    dragStartX = event.x
-                    dragStartY = event.y
-                    return true
+                    dragStartX = event.x; dragStartY = event.y; return true
                 }
                 if (isResizing) {
-                    val dx = event.x - dragStartX
-                    val dy = event.y - dragStartY
+                    val dx = event.x - dragStartX; val dy = event.y - dragStartY
                     resizeWindow(dx.toInt(), dy.toInt())
-                    dragStartX = event.x
-                    dragStartY = event.y
-                    return true
+                    dragStartX = event.x; dragStartY = event.y; return true
                 }
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                isDragging = false
-                isResizing = false
-                activeResizeEdge = null
-                return true
+                isDragging = false; isResizing = false; activeResizeEdge = null; return true
             }
         }
         return super.onTouchEvent(event)
     }
 
-    private fun isInTitleBar(x: Float, y: Float): Boolean {
-        return y <= TITLE_BAR_HEIGHT.dpToPx()
-    }
+    private fun isInTitleBar(x: Float, y: Float) = y <= TITLE_BAR_HEIGHT.dpToPx()
 
-    private fun getResizeEdgeAt(x: Float, y: Float): ResizeEdge? {
-        return resizeHandles.find { handle ->
-            handle.contains(x, y, this)
-        }?.edge
-    }
+    private fun getResizeEdgeAt(x: Float, y: Float): ResizeEdge? =
+        resizeHandles.find { it.contains(x, y, this) }?.edge
 
     private fun startDragging(event: MotionEvent) {
-        isDragging = true
-        dragStartX = event.x
-        dragStartY = event.y
+        isDragging = true; dragStartX = event.x; dragStartY = event.y
         originalBounds = windowManager.getWindowMeta(packageName)?.bounds ?: Rect()
-        bringToFront()
-        windowManager.focusWindow(packageName)
+        bringToFront(); windowManager.focusWindow(packageName)
     }
 
     private fun startResizing(event: MotionEvent, edge: ResizeEdge) {
-        isResizing = true
-        activeResizeEdge = edge
-        dragStartX = event.x
-        dragStartY = event.y
+        isResizing = true; activeResizeEdge = edge
+        dragStartX = event.x; dragStartY = event.y
         originalBounds = windowManager.getWindowMeta(packageName)?.bounds ?: Rect()
-        bringToFront()
-        windowManager.focusWindow(packageName)
+        bringToFront(); windowManager.focusWindow(packageName)
     }
 
     private fun moveWindow(dx: Int, dy: Int) {
-        windowManager.moveWindow(packageName, dx, dy)
-        updatePosition()
+        windowManager.moveWindow(packageName, dx, dy); updatePosition()
     }
 
     private fun resizeWindow(dx: Int, dy: Int) {
         val edge = activeResizeEdge ?: return
         val meta = windowManager.getWindowMeta(packageName) ?: return
         val newBounds = Rect(meta.bounds)
-        val screenWidth = context.resources.displayMetrics.widthPixels
-        val screenHeight = context.resources.displayMetrics.heightPixels
+        val sw = context.resources.displayMetrics.widthPixels
+        val sh = context.resources.displayMetrics.heightPixels
 
         when (edge) {
             ResizeEdge.LEFT -> {
@@ -245,7 +197,7 @@ class WindowDecorator(
                 if (newBounds.width() < 200) newBounds.left = newBounds.right - 200
             }
             ResizeEdge.RIGHT -> {
-                newBounds.right = (newBounds.right + dx).coerceAtMost(screenWidth)
+                newBounds.right = (newBounds.right + dx).coerceAtMost(sw)
                 if (newBounds.width() < 200) newBounds.right = newBounds.left + 200
             }
             ResizeEdge.TOP -> {
@@ -253,7 +205,7 @@ class WindowDecorator(
                 if (newBounds.height() < 200) newBounds.top = newBounds.bottom - 200
             }
             ResizeEdge.BOTTOM -> {
-                newBounds.bottom = (newBounds.bottom + dy).coerceAtMost(screenHeight)
+                newBounds.bottom = (newBounds.bottom + dy).coerceAtMost(sh)
                 if (newBounds.height() < 200) newBounds.bottom = newBounds.top + 200
             }
             ResizeEdge.LEFT_TOP -> {
@@ -263,32 +215,30 @@ class WindowDecorator(
                 if (newBounds.height() < 200) newBounds.top = newBounds.bottom - 200
             }
             ResizeEdge.RIGHT_TOP -> {
-                newBounds.right = (newBounds.right + dx).coerceAtMost(screenWidth)
+                newBounds.right = (newBounds.right + dx).coerceAtMost(sw)
                 newBounds.top = (newBounds.top + dy).coerceAtLeast(0)
                 if (newBounds.width() < 200) newBounds.right = newBounds.left + 200
                 if (newBounds.height() < 200) newBounds.top = newBounds.bottom - 200
             }
             ResizeEdge.LEFT_BOTTOM -> {
                 newBounds.left = (newBounds.left + dx).coerceAtLeast(0)
-                newBounds.bottom = (newBounds.bottom + dy).coerceAtMost(screenHeight)
+                newBounds.bottom = (newBounds.bottom + dy).coerceAtMost(sh)
                 if (newBounds.width() < 200) newBounds.left = newBounds.right - 200
                 if (newBounds.height() < 200) newBounds.bottom = newBounds.top + 200
             }
             ResizeEdge.RIGHT_BOTTOM -> {
-                newBounds.right = (newBounds.right + dx).coerceAtMost(screenWidth)
-                newBounds.bottom = (newBounds.bottom + dy).coerceAtMost(screenHeight)
+                newBounds.right = (newBounds.right + dx).coerceAtMost(sw)
+                newBounds.bottom = (newBounds.bottom + dy).coerceAtMost(sh)
                 if (newBounds.width() < 200) newBounds.right = newBounds.left + 200
                 if (newBounds.height() < 200) newBounds.bottom = newBounds.top + 200
             }
         }
 
-        windowManager.resizeWindow(packageName, newBounds)
-        updatePosition()
+        windowManager.resizeWindow(packageName, newBounds); updatePosition()
     }
 
     private fun minimizeWindow() {
-        windowManager.minimizeCurrentWindow()
-        isVisible = false
+        windowManager.minimizeCurrentWindow(); isVisible = false
     }
 
     private fun toggleMaximize() {
@@ -311,17 +261,14 @@ class WindowDecorator(
             val pm = context.packageManager
             val appInfo = pm.getApplicationInfo(packageName, 0)
             pm.getApplicationLabel(appInfo).toString()
-        } catch (e: Exception) {
-            packageName
-        }
+        } catch (_: Exception) { packageName }
         titleText.text = appName
     }
 
     fun updateButtons() {
         val meta = windowManager.getWindowMeta(packageName)
-        val isMaximized = meta?.isMaximized ?: false
         btnMaximize.setImageResource(
-            if (isMaximized) R.drawable.ic_restore else R.drawable.ic_maximize
+            if (meta?.isMaximized == true) R.drawable.ic_restore else R.drawable.ic_maximize
         )
     }
 
@@ -329,15 +276,12 @@ class WindowDecorator(
         val meta = windowManager.getWindowMeta(packageName) ?: return
         val bounds = meta.bounds
         layoutParams = LayoutParams(bounds.width(), bounds.height()).apply {
-            leftMargin = bounds.left
-            topMargin = bounds.top
+            leftMargin = bounds.left; topMargin = bounds.top
         }
         requestLayout()
     }
 
-    private fun Int.dpToPx(): Int {
-        return (this * context.resources.displayMetrics.density).toInt()
-    }
+    private fun Int.dpToPx(): Int = (this * context.resources.displayMetrics.density).toInt()
 }
 
 enum class ResizeEdge {
@@ -348,36 +292,31 @@ enum class ResizeEdge {
 class ResizeHandle(val edge: ResizeEdge) {
     fun getBounds(parent: View): Rect {
         val size = 20.dpToPx(parent.context)
-        val parentWidth = parent.width
-        val parentHeight = parent.height
-
+        val pw = parent.width; val ph = parent.height
         return when (edge) {
-            ResizeEdge.LEFT -> Rect(0, parentHeight / 2 - size / 2, size, parentHeight / 2 + size / 2)
-            ResizeEdge.RIGHT -> Rect(parentWidth - size, parentHeight / 2 - size / 2, parentWidth, parentHeight / 2 + size / 2)
-            ResizeEdge.TOP -> Rect(parentWidth / 2 - size / 2, 0, parentWidth / 2 + size / 2, size)
-            ResizeEdge.BOTTOM -> Rect(parentWidth / 2 - size / 2, parentHeight - size, parentWidth / 2 + size / 2, parentHeight)
+            ResizeEdge.LEFT -> Rect(0, ph / 2 - size / 2, size, ph / 2 + size / 2)
+            ResizeEdge.RIGHT -> Rect(pw - size, ph / 2 - size / 2, pw, ph / 2 + size / 2)
+            ResizeEdge.TOP -> Rect(pw / 2 - size / 2, 0, pw / 2 + size / 2, size)
+            ResizeEdge.BOTTOM -> Rect(pw / 2 - size / 2, ph - size, pw / 2 + size / 2, ph)
             ResizeEdge.LEFT_TOP -> Rect(0, 0, size, size)
-            ResizeEdge.RIGHT_TOP -> Rect(parentWidth - size, 0, parentWidth, size)
-            ResizeEdge.LEFT_BOTTOM -> Rect(0, parentHeight - size, size, parentHeight)
-            ResizeEdge.RIGHT_BOTTOM -> Rect(parentWidth - size, parentHeight - size, parentWidth, parentHeight)
+            ResizeEdge.RIGHT_TOP -> Rect(pw - size, 0, pw, size)
+            ResizeEdge.LEFT_BOTTOM -> Rect(0, ph - size, size, ph)
+            ResizeEdge.RIGHT_BOTTOM -> Rect(pw - size, ph - size, pw, ph)
         }
     }
 
-    fun contains(x: Float, y: Float, parent: View): Boolean {
-        return getBounds(parent).contains(x.toInt(), y.toInt())
-    }
+    fun contains(x: Float, y: Float, parent: View): Boolean =
+        getBounds(parent).contains(x.toInt(), y.toInt())
 
     fun draw(canvas: Canvas, parent: View) {
         val bounds = getBounds(parent)
         val paint = Paint().apply {
             color = Color.parseColor("#3F51B5")
-            style = Paint.Style.FILL
-            isAntiAlias = true
+            style = Paint.Style.FILL; isAntiAlias = true
         }
         canvas.drawRect(bounds, paint)
     }
 
-    private fun Int.dpToPx(context: Context): Int {
-        return (this * context.resources.displayMetrics.density).toInt()
-    }
+    private fun Int.dpToPx(context: Context): Int =
+        (this * context.resources.displayMetrics.density).toInt()
 }

@@ -1,72 +1,223 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/phoneLauncherRoot"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@color/background">
 
-    <!-- Search bar -->
+    <!-- Status Bar -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:orientation="horizontal"
+        android:layout_height="32dp"
         android:gravity="center_vertical"
         android:paddingStart="12dp"
         android:paddingEnd="12dp"
-        android:background="@color/surfaceVariant"
-        android:layout_margin="8dp">
+        android:background="@color/status_bar_bg"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/ivStatusNotification"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@android:drawable/ic_dialog_email"
+                android:alpha="0.7" />
+
+            <TextView
+                android:id="@+id/tvStatusTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="12:00"
+                android:textSize="11sp"
+                android:textColor="@android:color/white" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvStatusNetwork"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="WiFi"
+                android:textSize="10sp"
+                android:textColor="@android:color/white"
+                android:alpha="0.7" />
+
+            <TextView
+                android:id="@+id/tvStatusBattery"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:text="100%"
+                android:textSize="10sp"
+                android:textColor="@android:color/white"
+                android:alpha="0.7" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Search Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:background="@color/search_bar_bg"
+        android:orientation="horizontal">
 
         <EditText
             android:id="@+id/etPhoneSearch"
             android:layout_width="0dp"
             android:layout_height="36dp"
             android:layout_weight="1"
-            android:hint="Search apps..."
-            android:textColorHint="#666"
-            android:textColor="@color/onSurface"
-            android:background="@android:color/transparent"
-            android:inputType="text"
-            android:maxLines="1"
+            android:background="@drawable/bg_search_rounded"
+            android:hint="@string/search_hint"
             android:paddingStart="12dp"
-            android:paddingEnd="12dp" />
+            android:paddingEnd="36dp"
+            android:textColor="@android:color/white"
+            android:textColorHint="#80FFFFFF"
+            android:textSize="14sp"
+            android:inputType="textFilter" />
+
+        <FrameLayout
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="-36dp">
+
+            <ImageView
+                android:id="@+id/btnClearSearch"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:src="@android:drawable/ic_input_delete"
+                android:alpha="0.6"
+                android:visibility="gone" />
+        </FrameLayout>
     </LinearLayout>
 
-    <!-- App grid -->
+    <!-- App Grid -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/phoneAppGrid"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:padding="12dp"
+        android:padding="8dp"
         android:clipToPadding="false" />
 
-    <!-- Bottom bar with DeX toggle -->
+    <!-- Bottom Toolbar -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:background="@color/taskbarBackground"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/taskbar_bg">
 
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/app_name"
-            android:textColor="@color/onSurface"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+        <!-- Permission dots row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="16dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingTop="4dp">
 
-        <Button
-            android:id="@+id/btnSwitchToDesktop"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:text="@string/switch_to_desktop"
-            android:textSize="12sp"
-            android:background="?attr/selectableItemBackgroundBorderless" />
+            <ImageView
+                android:id="@+id/dotOverlay"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginHorizontal="3dp"
+                android:background="@drawable/bg_permission_dot" />
+
+            <ImageView
+                android:id="@+id/dotAccessibility"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginHorizontal="3dp"
+                android:background="@drawable/bg_permission_dot" />
+
+            <ImageView
+                android:id="@+id/dotWriteSecure"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginHorizontal="3dp"
+                android:background="@drawable/bg_permission_dot" />
+
+            <ImageView
+                android:id="@+id/dotNotification"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginHorizontal="3dp"
+                android:background="@drawable/bg_permission_dot" />
+
+            <ImageView
+                android:id="@+id/dotShizuku"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginHorizontal="3dp"
+                android:background="@drawable/bg_permission_dot" />
+
+            <ImageView
+                android:id="@+id/dotWirelessDebug"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginHorizontal="3dp"
+                android:background="@drawable/bg_permission_dot" />
+        </LinearLayout>
+
+        <!-- Buttons row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingBottom="8dp"
+            android:paddingTop="4dp">
+
+            <Button
+                android:id="@+id/btnPermissions"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="4dp"
+                android:background="@drawable/bg_bottom_btn"
+                android:text="@string/permission_center"
+                android:textColor="@android:color/white"
+                android:textSize="13sp"
+                android:textAllCaps="false" />
+
+            <Button
+                android:id="@+id/btnSettings"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="4dp"
+                android:background="@drawable/bg_bottom_btn"
+                android:text="@string/settings"
+                android:textColor="@android:color/white"
+                android:textSize="13sp"
+                android:textAllCaps="false" />
+
+            <Button
+                android:id="@+id/btnSwitchToDesktop"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="4dp"
+                android:background="@drawable/bg_bottom_btn_primary"
+                android:text="@string/enter_desktop"
+                android:textColor="@android:color/white"
+                android:textSize="13sp"
+                android:textAllCaps="false" />
+        </LinearLayout>
     </LinearLayout>
+
 </LinearLayout>

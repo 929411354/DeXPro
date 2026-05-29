@@ -1,184 +1,380 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/background"
-    android:padding="16dp">
+    android:background="@color/background">
 
-    <!-- Title -->
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="DeX Pro Settings"
-        android:textColor="@color/onBackground"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:paddingBottom="24dp" />
+        android:orientation="vertical"
+        android:padding="16dp">
 
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        <!-- Window Management -->
+        <TextView style="@style/SettingsSectionTitle" android:text="@string/window_management" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:background="@color/settings_section_bg"
+            android:layout_marginBottom="12dp">
 
-            <!-- Freeform window limit -->
+            <!-- Max windows -->
             <TextView
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Freeform Window Limit"
-                android:textColor="@color/onBackground"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:paddingTop="16dp" />
+                android:text="@string/max_windows"
+                android:textColor="@android:color/white"
+                android:textSize="13sp" />
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingTop="8dp">
+                android:gravity="center_vertical">
                 <SeekBar
                     android:id="@+id/sliderWindowLimit"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:max="12"
-                    android:progress="5" />
+                    android:max="11"
+                    android:progress="7" />
                 <TextView
                     android:id="@+id/tvWindowLimitValue"
-                    android:layout_width="48dp"
+                    android:layout_width="40dp"
                     android:layout_height="wrap_content"
-                    android:text="5"
-                    android:textColor="@color/onSurface"
-                    android:gravity="center"
-                    android:textSize="16sp" />
+                    android:text="8"
+                    android:textColor="@android:color/white"
+                    android:textSize="16sp"
+                    android:gravity="center" />
             </LinearLayout>
 
-            <!-- Dock position -->
+            <!-- Animation Speed -->
             <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/animation_speed"
+                android:textColor="@android:color/white"
+                android:textSize="13sp" />
+            <RadioGroup
+                android:id="@+id/rgAnimationSpeed"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Dock Position"
-                android:textColor="@color/onBackground"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:paddingTop="24dp" />
+                android:orientation="horizontal">
+                <RadioButton
+                    android:id="@+id/rbAnimFast"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/fast"
+                    android:textColor="#CCFFFFFF"
+                    android:textSize="12sp" />
+                <RadioButton
+                    android:id="@+id/rbAnimNormal"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/normal"
+                    android:textColor="#CCFFFFFF"
+                    android:textSize="12sp" />
+                <RadioButton
+                    android:id="@+id/rbAnimSlow"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/slow"
+                    android:textColor="#CCFFFFFF"
+                    android:textSize="12sp" />
+            </RadioGroup>
+
+            <!-- Aero Snap -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/aero_snap"
+                    android:textColor="@android:color/white"
+                    android:textSize="13sp" />
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swAeroSnap"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Desktop -->
+        <TextView style="@style/SettingsSectionTitle" android:text="@string/desktop" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:background="@color/settings_section_bg"
+            android:layout_marginBottom="12dp">
+
+            <!-- Desktop Columns -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/desktop_columns"
+                android:textColor="@android:color/white"
+                android:textSize="13sp" />
+            <RadioGroup
+                android:id="@+id/rgDesktopColumns"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <RadioButton android:id="@+id/rbCol4" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="4" android:textColor="#CCFFFFFF" android:textSize="12sp" />
+                <RadioButton android:id="@+id/rbCol5" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="5" android:textColor="#CCFFFFFF" android:textSize="12sp" />
+                <RadioButton android:id="@+id/rbCol6" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="6" android:textColor="#CCFFFFFF" android:textSize="12sp" />
+            </RadioGroup>
+
+            <!-- Desktop Rows -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/desktop_rows"
+                android:textColor="@android:color/white"
+                android:textSize="13sp" />
+            <RadioGroup
+                android:id="@+id/rgDesktopRows"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <RadioButton android:id="@+id/rbRow3" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="3" android:textColor="#CCFFFFFF" android:textSize="12sp" />
+                <RadioButton android:id="@+id/rbRow4" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="4" android:textColor="#CCFFFFFF" android:textSize="12sp" />
+                <RadioButton android:id="@+id/rbRow5" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="5" android:textColor="#CCFFFFFF" android:textSize="12sp" />
+            </RadioGroup>
+
+            <!-- Icon Size -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/icon_size"
+                android:textColor="@android:color/white"
+                android:textSize="13sp" />
+            <RadioGroup
+                android:id="@+id/rgIconSize"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <RadioButton android:id="@+id/rbIconSmall" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/small" android:textColor="#CCFFFFFF" android:textSize="12sp" />
+                <RadioButton android:id="@+id/rbIconMedium" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/medium" android:textColor="#CCFFFFFF" android:textSize="12sp" />
+                <RadioButton android:id="@+id/rbIconLarge" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/large" android:textColor="#CCFFFFFF" android:textSize="12sp" />
+            </RadioGroup>
+
+            <!-- Wallpaper -->
+            <Button
+                android:id="@+id/btnWallpaper"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_bottom_btn"
+                android:text="@string/change_wallpaper"
+                android:textColor="@android:color/white"
+                android:textAllCaps="false" />
+        </LinearLayout>
+
+        <!-- Taskbar -->
+        <TextView style="@style/SettingsSectionTitle" android:text="@string/taskbar" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:background="@color/settings_section_bg"
+            android:layout_marginBottom="12dp">
+
+            <!-- Dock Position -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/dock_position"
+                android:textColor="@android:color/white"
+                android:textSize="13sp" />
             <RadioGroup
                 android:id="@+id/rgDockPosition"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingTop="8dp">
-                <RadioButton
-                    android:id="@+id/rbDockBottom"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Bottom"
-                    android:textColor="@color/onSurface"
-                    android:checked="true" />
-                <RadioButton
-                    android:id="@+id/rbDockLeft"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Left"
-                    android:textColor="@color/onSurface" />
-                <RadioButton
-                    android:id="@+id/rbDockRight"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Right"
-                    android:textColor="@color/onSurface" />
+                android:orientation="horizontal">
+                <RadioButton android:id="@+id/rbDockBottom" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/bottom" android:textColor="#CCFFFFFF" android:textSize="12sp" />
+                <RadioButton android:id="@+id/rbDockLeft" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/left" android:textColor="#CCFFFFFF" android:textSize="12sp" />
+                <RadioButton android:id="@+id/rbDockRight" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/right" android:textColor="#CCFFFFFF" android:textSize="12sp" />
             </RadioGroup>
 
-            <!-- Dark mode toggle -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Appearance"
-                android:textColor="@color/onBackground"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:paddingTop="24dp" />
+            <!-- Auto Hide -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
                 android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingTop="8dp">
+                android:gravity="center_vertical">
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Dark Mode"
-                    android:textColor="@color/onSurface"
-                    android:textSize="14sp" />
+                    android:text="@string/auto_hide_taskbar"
+                    android:textColor="@android:color/white"
+                    android:textSize="13sp" />
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swTaskbarAutoHide"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <!-- Show System Tray -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/show_system_tray"
+                    android:textColor="@android:color/white"
+                    android:textSize="13sp" />
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swShowSystemTray"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Behavior -->
+        <TextView style="@style/SettingsSectionTitle" android:text="@string/behavior" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:background="@color/settings_section_bg"
+            android:layout_marginBottom="12dp">
+
+            <!-- Launch Mode -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/default_launch_mode"
+                android:textColor="@android:color/white"
+                android:textSize="13sp" />
+            <RadioGroup
+                android:id="@+id/rgLaunchMode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <RadioButton android:id="@+id/rbLaunchPhone" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/phone_mode" android:textColor="#CCFFFFFF" android:textSize="12sp" />
+                <RadioButton android:id="@+id/rbLaunchDesktop" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/desktop_mode" android:textColor="#CCFFFFFF" android:textSize="12sp" />
+            </RadioGroup>
+
+            <!-- Back Key Behavior -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/back_key_behavior"
+                android:textColor="@android:color/white"
+                android:textSize="13sp" />
+            <RadioGroup
+                android:id="@+id/rgBackAction"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <RadioButton android:id="@+id/rbBackMinimize" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/minimize" android:textColor="#CCFFFFFF" android:textSize="12sp" />
+                <RadioButton android:id="@+id/rbBackExit" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/exit" android:textColor="#CCFFFFFF" android:textSize="12sp" />
+            </RadioGroup>
+
+            <!-- Dark Mode -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/dark_mode"
+                    android:textColor="@android:color/white"
+                    android:textSize="13sp" />
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swDarkMode"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:checked="true" />
             </LinearLayout>
-
-            <!-- Light mode option -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingTop="12dp">
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Follow System"
-                    android:textColor="@color/onSurface"
-                    android:textSize="14sp" />
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/swFollowSystem"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:checked="false" />
-            </LinearLayout>
-
-            <!-- Wallpaper selection -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Wallpaper"
-                android:textColor="@color/onBackground"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:paddingTop="24dp" />
-            <Button
-                android:id="@+id/btnWallpaper"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:text="Select Wallpaper"
-                android:layout_marginTop="8dp" />
-
-            <!-- Advanced settings -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Advanced"
-                android:textColor="@color/onBackground"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:paddingTop="24dp" />
-            <Button
-                android:id="@+id/btnAdvancedSettings"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:text="Extended Settings"
-                android:layout_marginTop="8dp" />
-
         </LinearLayout>
-    </ScrollView>
-</LinearLayout>
+
+        <!-- About -->
+        <TextView style="@style/SettingsSectionTitle" android:text="@string/about" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:background="@color/settings_section_bg"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/app_version"
+                android:textColor="@android:color/white"
+                android:textSize="13sp" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="DeX Pro v2.0.0"
+                android:textColor="#B0FFFFFF"
+                android:textSize="12sp"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/github_link"
+                android:textColor="@android:color/white"
+                android:textSize="13sp" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="https://github.com/dexpro/android-launcher"
+                android:textColor="#80DEEA"
+                android:textSize="12sp"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/open_source_license"
+                android:textColor="@android:color/white"
+                android:textSize="13sp" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Apache License 2.0"
+                android:textColor="#B0FFFFFF"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

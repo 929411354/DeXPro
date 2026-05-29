@@ -20,8 +20,7 @@ class TaskbarAppAdapter(
 ) : ListAdapter<AppInfo, TaskbarAppAdapter.ViewHolder>(DIFF_CALLBACK) {
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val iconView: ImageView = itemView.findViewById(R.id.ivTaskbarIcon)
-        val indicatorView: View = itemView.findViewById(R.id.vActiveIndicator)
+        val iconView: ImageView = itemView.findViewById(R.id.ivTaskAppIcon)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
