@@ -73,7 +73,7 @@
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:layout_marginStart="6dp"
-            android:src="@android:drawable/arrow_up_float"
+            android:src="@drawable/ic_chevron_up"
             android:background="@null"
             android:alpha="0.7" />
     </LinearLayout>
@@ -95,7 +95,7 @@
             android:id="@+id/btnBluetooth"
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:src="@android:drawable/ic_lock_silent_mode_off"
+            android:src="@drawable/ic_bluetooth"
             android:background="@null"
             android:alpha="0.7" />
 
@@ -103,7 +103,7 @@
             android:id="@+id/btnWifi"
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:src="@android:drawable/ic_lock_idle_low_battery"
+            android:src="@drawable/ic_wifi"
             android:background="@null"
             android:alpha="0.7" />
 

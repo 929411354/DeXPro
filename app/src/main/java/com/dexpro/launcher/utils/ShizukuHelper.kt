@@ -46,7 +46,7 @@ class ShizukuHelper(private val context: Context) {
         if (!isShizukuInstalled()) return false
         return try {
             Shizuku.pingBinder()
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             false
         }
     }
@@ -221,7 +221,7 @@ class ShizukuHelper(private val context: Context) {
     fun checkShizukuPermission(): Boolean {
         return try {
             Shizuku.checkSelfPermission() == android.content.pm.PackageManager.PERMISSION_GRANTED
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             false
         }
     }

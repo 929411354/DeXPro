@@ -132,7 +132,7 @@ class PermissionsHelper(private val context: Context) {
             rikka.shizuku.Shizuku.pingBinder() &&
             rikka.shizuku.Shizuku.checkSelfPermission() ==
                 android.content.pm.PackageManager.PERMISSION_GRANTED
-        } catch (_: Exception) { false }
+        } catch (_: Throwable) { false }
     }
 
     fun shizukuIntent(): Intent? {

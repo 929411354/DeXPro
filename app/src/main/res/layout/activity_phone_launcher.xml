@@ -100,7 +100,7 @@
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:layout_gravity="center"
-                android:src="@android:drawable/ic_input_delete"
+                android:src="@drawable/ic_clear"
                 android:alpha="0.6"
                 android:visibility="gone" />
         </FrameLayout>
